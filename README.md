@@ -9,6 +9,8 @@ There is a **known issue**: if something goes wrong, the application is closed a
 
 This project is more of a proof-of-concept of controlling newer motherboards and creating effects with per LED lightning.
 
+![mystic-why]((media/simple_gui.png)
+
 ## Compatible motherboards
 | Model | Tested  |
 |--|--|
@@ -85,7 +87,9 @@ There is a base class created both for full area lightning effects and per led l
 ## GUI
 
 Every effect added to the effects directory is automatically imported and displayed in the GUI. The signature of `__init__` method is examined for every effect class and all the parameters are added to the screen as soon as it is chosen in the GUI. For now, parameter names are used as labels.
+
 ![gui-screenshot-1](media/simple_gui.png)
+
 ![gui-screenshot-2](media/simple_gui_2.png)
 
 ## Credits
