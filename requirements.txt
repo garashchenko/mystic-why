@@ -1,0 +1,4 @@
+hidapi==0.10.0.post1
+PySide2==5.15.1
+PySimpleGUIQt==0.35.0
+shiboken2==5.15.1
