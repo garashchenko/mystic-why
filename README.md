@@ -5,11 +5,10 @@
 This application allows applying user-developed RGB effects for newer MSI motherboards. 
 
 **CAUTION!** The application is not stable and may harm your hardware. It interacts with the motherboard's RGB controller HID device and there were cases of [bricked RGB controllers](https://gitlab.com/CalcProgrammer1/OpenRGB/-/issues/389). This has been only tested for MSI Z490 Gaming Plus (MS-7C75). Please refer to the list of motherboards with the same RGB controller. I am not responsible for any damage to your hardware so proceed with caution.
+
 There is a **known issue**: if something goes wrong, the application is closed and lightning gets 'stuck' you can use the Mystic Light tool to reset it by applying any lightning effect. It may not react to the Apply button for a while but should work in the end. It happens when a per led lightning effect had been used but the application was closed incorrectly. A 185-byte packed should be sent to a controller for it to return to a full lightning mode which can be done by Mystic Light.  
 
 This project is more of a proof-of-concept of controlling newer motherboards and creating effects with per LED lightning.
-
-![mystic-why]((media/simple_gui.png)
 
 ## Compatible motherboards
 | Model | Tested  |

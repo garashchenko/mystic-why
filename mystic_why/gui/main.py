@@ -106,13 +106,15 @@ class AppGui:
         while getattr(thread, "active", True):
             effect.run_step()
         effect.on_exit()
+        setattr(thread, "effect", None)
 
     def stop_event_thread(self):
         if self.effect_thread:
             self.effect_thread.active = False
+            while self.effect_thread.effect:
+                # waiting for thread to finish
+                time.sleep(0.5)
             self.effect_thread = None
-            # TODO: check why there is sleep needed
-            time.sleep(0.5)
 
     def process_run(self, event, values):
         self.stop_event_thread()
