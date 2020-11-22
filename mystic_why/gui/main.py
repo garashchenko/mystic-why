@@ -21,18 +21,21 @@ class AppGui:
     current_effect = ''
     effect_params = {}
     effect_thread = None
+    exit_on_stopped = False
 
-    def __init__(self):
-        self.areas = [area.value for area in enums.LightArea]
-        self.effects = get_effects_list()
+    def __init__(self, areas=None, effects=None):
+        if areas is None:
+            self.areas = [area.value for area in enums.LightArea]
+        if effects is None:
+            self.effects = get_effects_list()
         self.create_system_tray()
         self.build_base_window()
 
     def build_basic_layout(self):
-        return [[sg.Text('RGB area:')],
+        return [[sg.Text('RGB area:', key='AREAS_TXT')],
                 [sg.Listbox(values=self.areas, size=(20, len(self.areas)), enable_events=True,
                             key='AREAS', default_values=self.current_area)],
-                [sg.Text('Effect:')],
+                [sg.Text('Effect:', key='EFFECTS_TXT')],
                 [sg.Listbox(values=list(self.effects.keys()), key='EFFECTS',
                             size=(20, len(self.areas)), enable_events=True, default_values=self.current_effect)]]
 
@@ -61,7 +64,11 @@ class AppGui:
                 self.layout.extend([[sg.Text(param)],
                                     [sg.InputText(key=param, default_text=param_info.default)]])
 
-        self.layout.append([sg.Button('Run', key='RUN')])
+        self.layout.extend([[sg.Button('Run', key='RUN')],
+                            [sg.Button('Stop', key='STOP', visible=False)],
+                            [sg.Text('Waiting for the effect thread to stop...', justification='center',
+                                     key='STOP_TXT', visible=False),
+                             sg.Input(visible=False, enable_events=True, key='THREAD_STOPPED')]])
 
         self.window = sg.Window('Mystic Why', self.layout)
 
@@ -100,6 +107,11 @@ class AppGui:
 
         return kwargs
 
+    def set_listbox_visibility(self, listbox_key, visible):
+        self.window[listbox_key].Update(visible=visible)
+        self.window[f'{listbox_key}_TXT'].Update(visible=visible)
+
+
     def run_effect_loop(self):
         thread = threading.current_thread()
         effect = getattr(thread, "effect")
@@ -108,22 +120,42 @@ class AppGui:
         effect.on_exit()
         setattr(thread, "effect", None)
 
-    def stop_event_thread(self):
-        if self.effect_thread:
-            self.effect_thread.active = False
-            while self.effect_thread.effect:
-                # waiting for thread to finish
-                time.sleep(0.5)
-            self.effect_thread = None
+    def stop_effect_thread(self):
+        self.effect_thread.active = False
+        while self.effect_thread.effect:
+            # waiting for thread to finish
+            time.sleep(0.5)
+        self.effect_thread = None
+        self.window['THREAD_STOPPED'].Update(value='True')
 
     def process_run(self, event, values):
-        self.stop_event_thread()
+        if self.effect_thread:
+            self.stop_effect_thread()
         kwargs = self.build_kwargs_from_screen(values)
         effect_obj = self.effects[self.current_effect](**kwargs)
         self.effect_thread = threading.Thread(target=self.run_effect_loop, daemon=True)
         self.effect_thread.active = True
         self.effect_thread.effect = effect_obj
         self.effect_thread.start()
+        self.set_listbox_visibility('AREAS', visible=False)
+        self.set_listbox_visibility('EFFECTS', visible=False)
+        self.window['RUN'].Update(visible=False)
+        self.window['STOP'].Update(visible=True)
+
+    def process_stop(self):
+        threading.Thread(target=self.stop_effect_thread, daemon=True).start()
+        self.window['STOP'].Update(visible=False)
+        self.window['STOP_TXT'].Update(visible=True)
+
+    def process_stopped(self, event, values):
+        if values['THREAD_STOPPED'] == 'True':
+            self.set_listbox_visibility('AREAS', visible=True)
+            self.set_listbox_visibility('EFFECTS', visible=True)
+            self.window['STOP_TXT'].Update(visible=False)
+            self.window['RUN'].Update(visible=True)
+            self.window['THREAD_STOPPED'].Update(value='False')
+            if self.exit_on_stopped:
+                raise EventLoopTerminated
 
     def create_system_tray(self):
         menu_def = ['BLANK', ['E&xit']]
@@ -133,7 +165,10 @@ class AppGui:
     def check_tray_events(self):
         event = self.tray.read(timeout=100)
         if event == 'Exit':
-            self.stop_event_thread()
+            if self.effect_thread:
+                self.exit_on_stopped = True
+                self.process_stop()
+                return
             raise EventLoopTerminated
         elif event == '__ACTIVATED__':
             self.tray.hide()
@@ -154,6 +189,10 @@ class AppGui:
             self.tray.ShowMessage('Still running', 'Mystic Why is still running in tray')
         elif event == 'RUN':
             self.process_run(event, values)
+        elif event == 'STOP':
+            self.process_stop()
+        elif event == 'THREAD_STOPPED':
+            self.process_stopped(event, values)
         elif event == 'EFFECTS':
             self.process_effects_selected(event, values)
         elif event == 'AREAS':
