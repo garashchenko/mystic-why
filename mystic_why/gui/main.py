@@ -70,12 +70,9 @@ class AppGui:
 
         self.layout.extend([[sg.Button('Run', key='RUN')],
                             [sg.Button('Stop', key='STOP', visible=False)],
-                            [sg.Button('Save as default', key='SAVE', visible=True)]])
-
-        if self.has_defaults:
-            self.layout.extend([[sg.Button('Load defaults', key='LOAD', visible=True)]])
-
-        self.layout.extend([[sg.Text('Waiting for the effect thread to stop...', justification='center',
+                            [sg.Button('Save as default', key='SAVE', visible=True)],
+                            [sg.Button('Load defaults', key='LOAD', visible=self.has_defaults)],
+                            [sg.Text('Waiting for the effect thread to stop...', justification='center',
                                      key='STOP_TXT', visible=False),
                              sg.Input(visible=False, enable_events=True, key='THREAD_STOPPED')]])
 
@@ -158,6 +155,8 @@ class AppGui:
     def process_save(self, values):
         with open(SETTINGS_FILE, 'w+') as outfile:
             json.dump(values, outfile)
+            self.has_defaults = True
+            self.window['LOAD'].update(visible=True)
 
     def load_defaults(self):
         try:
