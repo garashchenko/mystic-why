@@ -1,3 +1,4 @@
+import json
 import threading
 import time
 from typing import List
@@ -5,6 +6,7 @@ from typing import List
 import PySimpleGUIQt as sg
 
 from mystic_why.common import enums
+from mystic_why.common.const import SETTINGS_FILE
 from mystic_why.core.light import Color
 from mystic_why.effects.utils import get_effects_list, get_effect_params
 
@@ -22,6 +24,7 @@ class AppGui:
     effect_params = {}
     effect_thread = None
     exit_on_stopped = False
+    has_defaults = False
 
     def __init__(self, areas=None, effects=None):
         if areas is None:
@@ -30,6 +33,7 @@ class AppGui:
             self.effects = get_effects_list()
         self.create_system_tray()
         self.build_base_window()
+        self.load_defaults()
 
     def build_basic_layout(self):
         return [[sg.Text('RGB area:', key='AREAS_TXT')],
@@ -66,11 +70,16 @@ class AppGui:
 
         self.layout.extend([[sg.Button('Run', key='RUN')],
                             [sg.Button('Stop', key='STOP', visible=False)],
-                            [sg.Text('Waiting for the effect thread to stop...', justification='center',
+                            [sg.Button('Save as default', key='SAVE', visible=True)]])
+
+        if self.has_defaults:
+            self.layout.extend([[sg.Button('Load defaults', key='LOAD', visible=True)]])
+
+        self.layout.extend([[sg.Text('Waiting for the effect thread to stop...', justification='center',
                                      key='STOP_TXT', visible=False),
                              sg.Input(visible=False, enable_events=True, key='THREAD_STOPPED')]])
 
-        self.window = sg.Window('Mystic Why', self.layout)
+        self.window = sg.Window('Mystic Why', self.layout, finalize=True)
 
     def process_effects_selected(self, event, values):
         try:
@@ -111,7 +120,6 @@ class AppGui:
         self.window[listbox_key].Update(visible=visible)
         self.window[f'{listbox_key}_TXT'].Update(visible=visible)
 
-
     def run_effect_loop(self):
         thread = threading.current_thread()
         effect = getattr(thread, "effect")
@@ -146,6 +154,27 @@ class AppGui:
         threading.Thread(target=self.stop_effect_thread, daemon=True).start()
         self.window['STOP'].Update(visible=False)
         self.window['STOP_TXT'].Update(visible=True)
+
+    def process_save(self, values):
+        with open(SETTINGS_FILE, 'w+') as outfile:
+            json.dump(values, outfile)
+
+    def load_defaults(self):
+        try:
+            with open(SETTINGS_FILE) as file:
+                settings = json.load(file)
+                self.has_defaults = True
+                self.process_area_selected('AREAS', settings)
+                self.process_effects_selected('EFFECTS', settings)
+                for key, value in settings.items():
+                    if key in ('AREAS', 'EFFECTS'):
+                        continue
+                    self.window[key].update(value=value)
+                    if key.startswith('COLOR'):
+                        self.window[f'{key}_btn'].update(button_color=('black', value))
+        except IOError:
+            self.has_defaults = False
+            return
 
     def process_stopped(self, event, values):
         if values['THREAD_STOPPED'] == 'True':
@@ -191,6 +220,10 @@ class AppGui:
             self.process_run(event, values)
         elif event == 'STOP':
             self.process_stop()
+        elif event == 'SAVE':
+            self.process_save(values)
+        elif event == 'LOAD':
+            self.load_defaults()
         elif event == 'THREAD_STOPPED':
             self.process_stopped(event, values)
         elif event == 'EFFECTS':
