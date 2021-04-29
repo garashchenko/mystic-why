@@ -16,9 +16,9 @@ This project is more of a proof-of-concept of controlling newer motherboards and
 |MS_7C67|no
 |MS_7B10|no
 |MS_7C87|no
-|MS_7B93|no
+|MS_7B93|**not supported**
 |MS_7C34|no
-|MS_7C35|no
+|MS_7C35|**not supported**
 |MS_7C36|no
 |MS_7C37|no
 |MS_7C42|no
@@ -30,7 +30,7 @@ This project is more of a proof-of-concept of controlling newer motherboards and
 |MS_7C70|no
 |MS_7C71|no
 |MS_7C73|no
-|MS_7C75|**yes**
+|MS_7C75|**supported**
 |MS_7C76|no
 |MS_7C77|no
 |MS_7C79|no
@@ -64,12 +64,12 @@ This project is more of a proof-of-concept of controlling newer motherboards and
 |MS_3EA4|no
 |MS_905D|no
 |MS_7C90|no
-|MS_7C91|no
+|MS_7C91|**supported**
 |MS_7C92|no
 |MS_7C94|no
 |MS_7C95|no
 |MS_7C96|no
-|MS_7C56|no
+|MS_7C56|**supported**
 |MS_7D13|no
 |MS_7D14|no
 
