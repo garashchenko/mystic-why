@@ -1,9 +1,13 @@
+from math import ceil
+
 import mystic_why.effects
 
 import importlib
 import inspect
 import pkgutil
 import sys
+
+from mystic_why.core.light import Color
 
 
 def get_pyinstaller_modules():
@@ -46,3 +50,13 @@ def get_effect_params(effect_class):
     for parameter in signature.parameters:
         result[parameter] = signature.parameters[parameter]
     return result
+
+
+def interpolate(value_from: int, value_to: int, fraction: float) -> int:
+    return ceil((value_to - value_from) * fraction + value_from)
+
+
+def interpolate_color(from_color: Color, to_color: Color, fraction: float) -> Color:
+    return Color(red=interpolate(from_color.red, to_color.red, fraction),
+                 green=interpolate(from_color.green, to_color.green, fraction),
+                 blue=interpolate(from_color.blue, to_color.blue, fraction))

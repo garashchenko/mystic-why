@@ -49,6 +49,7 @@ class AppGui:
 
     def build_ext_window(self):
         self.layout = self.build_basic_layout()
+        color_count = getattr(self.effects[self.current_effect], "color_count", 8)
         for param, param_info in self.effect_params.items():
             if param in ['self', 'area']:
                 continue
@@ -60,7 +61,7 @@ class AppGui:
                                                            target=f'COLOR_{param}')]])
             elif param_info.annotation is List[Color]:
                 self.layout.extend([[sg.Text(param)]])
-                for i in range(8):
+                for i in range(color_count):
                     self.layout.extend([[sg.Input(visible=False, enable_events=True, key=f'COLOR_LIST_{i}_{param}')],
                                         [sg.ColorChooserButton('Pick a color', key=f'COLOR_LIST_{i}_{param}_btn',
                                                                target=f'COLOR_LIST_{i}_{param}')]])
